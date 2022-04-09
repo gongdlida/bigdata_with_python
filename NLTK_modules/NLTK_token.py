@@ -1,6 +1,6 @@
- import nltk
- nltk.download('averaged_perceptron_tagger')
-
+#  import nltk
+#  nltk.download('averaged_perceptron_tagger')
+# 토큰화 : 텍스트를 토큰이라 불리는 단위로 나누는 작업
 #문장 토큰화
 from nltk.tokenize import sent_tokenize
 text = "The most beautiful things in the world cannot be seen or touched. They are felt with the heart."
