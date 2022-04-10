@@ -6,7 +6,7 @@ urlretrieve(reviewDataUrl, filename  ="ratings_total.txt")
 #데이터 로딩
 import pandas as pd
 review_df = pd.read_csv("./SentimentAnalysis/data/ratings_total.txt",sep="\t",names=["rating","review"])
-review_df.to_csv("./SentimentAnalysis/data/ratingFileToXml.csv",sep="\t",index=False)
+review_df.to_csv("./SentimentAnalysis/data/1.review_data.csv",sep="\t",index=False)
 
 #pandas 패키지
 # 파이썬에서 대중적으로 사용되는 데이터 분석 및 처리용 패키지
@@ -37,9 +37,11 @@ print(review_df.head())
 print(review_df["rating"].value_counts())
 
 #차트로 보기
-review_df["rating"].value_counts().plot(kind="bar")
+
 import matplotlib.pyplot as plt
+review_df["rating"].value_counts().plot(kind="bar")
 plt.show()
+
 
 ## 값이 없는 결측치가 존재하는지 확인
 # 결측치가 있으면 모형을 학습할 수 없는 경우가 대부분임
@@ -53,8 +55,9 @@ print(review_df.isna().sum().sum())
 
 ## 데이터 정제하기
 # 리뷰내용에서 한글과 공백을 제외하고 모두 제거
-review_df["review"] = review_df["review"].str.replace("^[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]","")
-
+review_df = pd.read_csv("./SentimentAnalysis/data/ratings_total.txt",sep="\t",names=["rating","review"])
+review_df["review"] = review_df["review"].str.replace("[^ㄱ-ㅎ|ㅏ-ㅣ|가-힣]","",regex=True)
+review_df.to_csv("./SentimentAnalysis/data/2.onlyKorean.csv",sep="\t",index=False)
 # 56번의 처리가 잘되었는지 확인
 import numpy as np 
 review_df["review"] = review_df["review"].replace("",np.nan) # nan -> not a number
@@ -62,7 +65,8 @@ print(review_df.isna().sum())
 
 # 리뷰내용에서 한글 오류 수정
 review_df["review"] = review_df["review"].str.replace("배공","배송")
-
+review_df["review"] = review_df["review"].str.replace("보폴","보풀")
+review_df.to_csv("./SentimentAnalysis/data/3.Edittypo.csv",sep="\t",index=False)
 # def findStr(str):
 #   if str == "배공": 
 #     return True
@@ -77,26 +81,36 @@ okt = Okt()
 
 x =[]
 stopwords = ["도", "는", "다", "의", "가", "이", "은", "한", "에", "하", "고", "을","를", "인", "듯", "과", "와", "네", "들", "듯", "지", "임", "게"]
-for i,r in enumerate(review_df["review"]):
-  tokenized = okt.morphs(r,stem=True)
-  tokenized_with_us = [word for word in tokenized if not word in stopwords]
+
+# for i,r in enumerate(review_df["review"]):
+#   tokenized = okt.morphs(r,stem=True)
+#   tokenized_with_us = [word for word in tokenized if not word in stopwords]
+#   x.append(tokenized_with_us)
+  
+#   if i % 50000 == 0: print(i)
+
+for indexOfReview, review in enumerate(review_df["review"]): 
+  tokenized = okt.morphs(review,stem=True) # 토큰화
+  tokenized_with_us = [word for word in tokenized if not word in stopwords] # 불용어 제거
   x.append(tokenized_with_us)
-  if i % 50000 == 0: print(i)
+  
+  if indexOfReview % 50000 == 0: print(indexOfReview)
 
 review_df["tokenized"] = x
-
+del review_df["reivew"]
+review_df.to_csv("./SentimentAnalysis/data/4.tokenizedDataWithlabel.csv",sep="\t",index=False)
 # 감독학습으로 감성분석을 하기 위한 레이블 설정
 # 3이상이면 1 3점미만 0 -> 선호도 분석
 review_df["label"] = [1 if x > 3 else 0 for x in review_df["rating"]]
-del review_df["rating"]
+del review_df["rating"] # rating을 label로 대체
 print(review_df.head())
-review_df.to_csv("./SentimentAnalysis/data/new.csv",sep="\t",index=False)
+review_df.to_csv("./SentimentAnalysis/data/dataWithLabel.csv",sep="\t",index=False)
 
 # scikit-learn 패키지
 # 기계학습을 위한 효율적인 패키지
 # 감독학습과 비감독 학습을 망라한 다양한 알고리즘들과 함께, 모형 개발, 모형 선택, 전처리 등을 위한 보조적인 함수들도 다수제공
 
-import sklearn
+import sklearn.naive_bayes
 clf = sklearn.naive_bayes.MultinomialNB()
 
 ## 모형 개발과 검증
@@ -128,5 +142,8 @@ vectorData.to_csv("./SentimentAnalysis/data/vectorData.csv",sep="\n",index=False
 # 출현 문서 수가 너무 작은 경우와 출현 문서수가 너무 큰 경우에는 분석에 도움이 안되기 때문에 제거
 
 vectorizer = CountVectorizer(analyzer = lambda x:x, min_df=5,max_df=0.8)# min=5개 문서이상 출현, max=전체 문서들의 80%이하에서 출현해야함
-train_vector = vectorizer.fit_transform(train_df["tokenized"])
+train_vector = vectorizer.fit_transform(train_df["tokenized"]).toarray()
+print(train_vector.shape) # (150000,10664)
 
+valid_vector = vectorizer.transform(vaild_df["tokenized"]).toarray()
+print(valid_vector.shape) #  (50000,10664)
