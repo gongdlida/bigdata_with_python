@@ -3,9 +3,11 @@ from nltk.stem import SnowballStemmer
 from NLTK_Stopword import no_stopword
 from nltk.stem import WordNetLemmatizer
 
-#어간추출 : 단어의 어간을 추출하는 작업
+## 어간추출 : 단어의 어간을 추출하는 작업 
+# played => play
 ss = SnowballStemmer(language="english")
-# for문 사용방식 2가지
+
+# for문 + 새로운 리스트에 데이터 넣는법 사용방식 2가지
 # stemmed = []
 # for word in no_stopword: stemmed.append(ss.stem(word))
 stemmed = [ss.stem(word) for word in no_stopword]

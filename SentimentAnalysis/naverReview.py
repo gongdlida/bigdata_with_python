@@ -97,7 +97,7 @@ for indexOfReview, review in enumerate(review_df["review"]):
   if indexOfReview % 50000 == 0: print(indexOfReview)
 
 review_df["tokenized"] = x
-del review_df["reivew"]
+del review_df["review"]
 review_df.to_csv("./SentimentAnalysis/data/4.tokenizedDataWithlabel.csv",sep="\t",index=False)
 # 감독학습으로 감성분석을 하기 위한 레이블 설정
 # 3이상이면 1 3점미만 0 -> 선호도 분석
@@ -136,8 +136,6 @@ print("검증용 리뷰의 수:", len(valid_df))
 from sklearn.feature_extraction.text import CountVectorizer
 vectorizer = CountVectorizer(analyzer = lambda x:x)
 vector = vectorizer.fit_transform(train_df["tokenized"]).toarray()
-vectorData = pd.DataFrame(vector)
-vectorData.to_csv("./SentimentAnalysis/data/vectorData.csv",sep="\n",index=False)
 
 # 출현 문서 수가 너무 작은 경우와 출현 문서수가 너무 큰 경우에는 분석에 도움이 안되기 때문에 제거
 
@@ -145,5 +143,11 @@ vectorizer = CountVectorizer(analyzer = lambda x:x, min_df=5,max_df=0.8)# min=5�
 train_vector = vectorizer.fit_transform(train_df["tokenized"]).toarray()
 print(train_vector.shape) # (150000,10664)
 
-valid_vector = vectorizer.transform(vaild_df["tokenized"]).toarray()
+valid_vector = vectorizer.transform(valid_df["tokenized"]).toarray()
 print(valid_vector.shape) #  (50000,10664)
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+vectorizer = TfidfVectorizer(analyzer=lambda x:x, min_df=5, max_df=0.8)
+train_df = vectorizer.fit_transform(train_df["tokenized"]).toarray()
+valid_df = vectorizer.fit_transform(valid_df["tokenized"]).toarray()
+
