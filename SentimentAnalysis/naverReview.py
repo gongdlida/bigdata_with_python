@@ -146,8 +146,26 @@ print(train_vector.shape) # (150000,10664)
 valid_vector = vectorizer.transform(valid_df["tokenized"]).toarray()
 print(valid_vector.shape) #  (50000,10664)
 
+# Tfidf 벡터
+# 각 문서에서 각 단아가 출현한 횟수 TF(Term Frequency)에 IDF(Inverse Document Frequency)를 곱해서 구한 벡터
+# IDF - log(전체 문서 수 / (1+해당 단어가 출현한 문서 수) *단 log의 밑은 10이나 상수 e를 사용할 수 있음
+# 한 단어에 대한 IDF 값은 모든 문서에 대하여 동일
+# 사이킷런 패키지를 이용한 Tfidf 벡터 만들기
 from sklearn.feature_extraction.text import TfidfVectorizer
 vectorizer = TfidfVectorizer(analyzer=lambda x:x, min_df=5, max_df=0.8)
 train_df = vectorizer.fit_transform(train_df["tokenized"]).toarray()
 valid_df = vectorizer.fit_transform(valid_df["tokenized"]).toarray()
 
+
+# Tfidf 벡터
+# 나이브 베이즈 모형 개발과 검증
+# 일반적으로 Tfidf 벡터를 이용하는 것이 카운트 벡터를 사용하는 것 보다 좋은 결과를 보여주지만 항상 그런 것은 아니다.
+from sklearn.naive_bayes import MultinomialNB
+clf = MultinomialNB()
+clf.fit(train_vector,train_df["label"])
+pred = clf.predict(valid_vector)
+correct = sum(valid_df["label"] == pred)
+print(correct)
+
+accuracy = correct/len(valid_df)
+print(accuracy)
