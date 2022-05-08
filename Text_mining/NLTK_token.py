@@ -20,3 +20,11 @@ print(tokenized_words)
 from nltk.tag import pos_tag
 tagged_words = pos_tag(tokenized_words)
 print(tagged_words)
+
+len([1,2,3,4,5])
+
+i = list(range(1,3))
+print(i)
+
+for i in [1,2,3]:print(i)
+
